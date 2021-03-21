@@ -19,11 +19,11 @@ public class TradeEngineService{
 
     TradeEnginePubSub tradeEnginePubSub = new TradeEnginePubSub();
 
-    @EventListener(ApplicationReadyEvent.class)
-    public String run(){
-        //have redisClient connect pubsub(subscriber) and channel
-        tradeEngineRedisClient.connect().subscribe(tradeEnginePubSub,"orderCreated");
-
-        return "Subscribed to channel.";
-    }
+//    @EventListener(ApplicationReadyEvent.class)
+//    public String run(){
+//        //have redisClient connect pubsub(subscriber) and channel
+//        tradeEngineRedisClient.connect().subscribe(tradeEnginePubSub,"orderCreated");
+//
+//        return "Subscribed to channel.";
+//    }
 }
