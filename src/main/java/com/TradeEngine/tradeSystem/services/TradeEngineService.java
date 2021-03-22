@@ -26,11 +26,18 @@ public class TradeEngineService{
     @PostConstruct
     public void run(){
         //have redisClient connect pubsub(subscriber) and channel
+        Jedis redisPublisher;
         try {
-            tradeEngineRedisClient.connect().subscribe(tradeEnginePubSub,"orderCreated");;
+            //connect to redis server and send order data
+            redisPublisher = tradeEngineRedisClient.connect();
         }catch (RedisConnectionFailedException rcx){
             throw new RedisConnectionFailedException("Connection to redis server failed.");
         }
+
+        redisPublisher.subscribe(tradeEnginePubSub,"orderCreated");
+
+        redisPublisher.close();
+
 
     }
 }
