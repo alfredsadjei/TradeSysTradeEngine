@@ -21,11 +21,9 @@ public class TradeEngineRedisClient {
             jedis.auth(RedisServer.SERVER_KEY.getKeyVal());
 
             System.out.println("Connected to redis server...");
-
             return this.jedis;
 
         }
-
 
         return this.jedis;
     }

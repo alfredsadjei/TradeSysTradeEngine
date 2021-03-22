@@ -8,10 +8,12 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
 
 
-
-@Component
+@Service
 public class TradeEngineService{
 
     @Autowired
@@ -19,11 +21,9 @@ public class TradeEngineService{
 
     TradeEnginePubSub tradeEnginePubSub = new TradeEnginePubSub();
 
-//    @EventListener(ApplicationReadyEvent.class)
-//    public String run(){
-//        //have redisClient connect pubsub(subscriber) and channel
-//        tradeEngineRedisClient.connect().subscribe(tradeEnginePubSub,"orderCreated");
-//
-//        return "Subscribed to channel.";
-//    }
+    @PostConstruct
+    public void run(){
+        //have redisClient connect pubsub(subscriber) and channel
+        tradeEngineRedisClient.connect().subscribe(tradeEnginePubSub,"orderCreated");
+    }
 }

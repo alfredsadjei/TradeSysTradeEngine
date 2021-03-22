@@ -2,17 +2,12 @@ package com.TradeEngine.tradeSystem.controllers;
 
 import com.TradeEngine.tradeSystem.DAOs.MarketDataRepo;
 import com.TradeEngine.tradeSystem.DTOs.MarketData;
-import com.TradeEngine.tradeSystem.TradeEngineRedisClient;
-import com.TradeEngine.tradeSystem.exceptions.RedisConnectionFailedException;
 import com.TradeEngine.tradeSystem.services.TradeEngineService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import redis.clients.jedis.Jedis;
+
 
 import java.util.List;
 
