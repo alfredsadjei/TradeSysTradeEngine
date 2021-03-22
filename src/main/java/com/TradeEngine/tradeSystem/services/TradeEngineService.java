@@ -23,7 +23,7 @@ public class TradeEngineService{
 
     TradeEnginePubSub tradeEnginePubSub = new TradeEnginePubSub();
 
-    @PostConstruct
+    @EventListener(ApplicationReadyEvent.class)
     public void run(){
         //have redisClient connect pubsub(subscriber) and channel
         Jedis redisPublisher;
@@ -35,8 +35,6 @@ public class TradeEngineService{
         }
 
         redisPublisher.subscribe(tradeEnginePubSub,"orderCreated");
-
-        redisPublisher.close();
 
 
     }
