@@ -19,22 +19,20 @@ import javax.annotation.PostConstruct;
 public class TradeEngineService{
 
     @Autowired
-    TradeEngineRedisClient tradeEngineRedisClient;
-
-    TradeEnginePubSub tradeEnginePubSub = new TradeEnginePubSub();
+    TradeEnginePubSub tradeEnginePubSub;
 
     @EventListener(ApplicationReadyEvent.class)
     public void run(){
-        //have redisClient connect pubsub(subscriber) and channel
-        Jedis redisPublisher;
+        //have redisClient connect pub sub(subscriber) and channel
+        Jedis redisSubscriber;
         try {
             //connect to redis server and send order data
-            redisPublisher = tradeEngineRedisClient.connect();
+            redisSubscriber = TradeEngineRedisClient.connect();
         }catch (RedisConnectionFailedException rcx){
-            throw new RedisConnectionFailedException("Connection to redis server failed.");
+            throw new RedisConnectionFailedException("Trade engine Subscriber connection to redis server failed.");
         }
 
-        redisPublisher.subscribe(tradeEnginePubSub,"orderCreated");
+        redisSubscriber.subscribe(tradeEnginePubSub,"orderCreated");
 
 
     }
