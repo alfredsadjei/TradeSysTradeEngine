@@ -25,12 +25,20 @@ public class TradeEngRestController {
     public void getMarketData(@RequestBody List<MarketData> marketData){
 
         //Sets the new market data whenever an update occurs
-        marketDataRepo.setDataRepository(marketData);
+        marketDataRepo.setExchange1DataRepository(marketData);
 
 
         //TODO: splitorder column false true
     }
 
+    @PostMapping(value = "/md2")
+    public void getMarketData2(@RequestBody List<MarketData> marketData){
 
+        //Sets the new market data whenever an update occurs
+        marketDataRepo.setExchange2DataRepository(marketData);
+
+
+        //TODO: splitorder column false true
+    }
 
 }
