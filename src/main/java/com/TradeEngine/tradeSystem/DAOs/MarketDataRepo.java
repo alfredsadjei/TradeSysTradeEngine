@@ -50,6 +50,5 @@ public class MarketDataRepo implements ApplicationRunner {
         exchange1DataRepository = md1.execute().body();
         exchange2DataRepository = md2.execute().body();
 
-
     }
 }

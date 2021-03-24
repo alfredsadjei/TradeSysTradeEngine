@@ -1,15 +1,15 @@
 package com.TradeEngine.tradeSystem.DTOs;
 
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
 //This represents the order being received by the engine
 public class ProductOrder {
 
     private String id; //random UUID string;
     private String productName; //product name
     private double price; //how much client is willing to buy or sell for
+    private Long clientId;
+    private double funds;
+    private int quantityOwned;
     private int quantity; // number of products to buy or sell
     private String side; // buy or sell order
     private String date;
@@ -27,12 +27,36 @@ public class ProductOrder {
         this.productName = productName;
     }
 
+    public Long getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(Long clientId) {
+        this.clientId = clientId;
+    }
+
     public double getPrice() {
         return price;
     }
 
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    public int getQuantityOwned() {
+        return quantityOwned;
+    }
+
+    public void setQuantityOwned(int quantityOwned) {
+        this.quantityOwned = quantityOwned;
+    }
+
+    public double getFunds() {
+        return funds;
+    }
+
+    public void setFunds(double funds) {
+        this.funds = funds;
     }
 
     public int getQuantity() {
@@ -69,6 +93,9 @@ public class ProductOrder {
                 "id='" + id + '\'' +
                 ", productName='" + productName + '\'' +
                 ", price=" + price +
+                ", clientId=" + clientId +
+                ", funds=" + funds +
+                ", quantityOwned=" + quantityOwned +
                 ", quantity=" + quantity +
                 ", side='" + side + '\'' +
                 ", date='" + date + '\'' +
