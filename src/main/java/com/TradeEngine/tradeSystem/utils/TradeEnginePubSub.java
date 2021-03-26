@@ -1,19 +1,17 @@
-package com.TradeEngine.tradeSystem.DTOs;
+package com.TradeEngine.tradeSystem.utils;
 
-import com.TradeEngine.tradeSystem.DAOs.MarketDataRepo;
+import com.TradeEngine.tradeSystem.DTOs.ProductOrder;
 import com.TradeEngine.tradeSystem.services.TradeEngineService;
-import com.TradeEngine.tradeSystem.utils.RedisServer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
 
-@Component
+@Service
 public class TradeEnginePubSub extends JedisPubSub {
-
 
     @Autowired
     TradeEngineService tradeEngineService;
@@ -24,12 +22,11 @@ public class TradeEnginePubSub extends JedisPubSub {
         ObjectMapper objectMapper = new ObjectMapper();
         ProductOrder orderMessage;
 
-
         try {
 
             orderMessage = objectMapper.readValue(message,ProductOrder.class);
 
-            ExchangeOrder exOrder = tradeEngineService.strategize(orderMessage);
+            ProductOrder exOrder = tradeEngineService.strategize(orderMessage);
 
             System.out.println(exOrder);
 
@@ -40,14 +37,13 @@ public class TradeEnginePubSub extends JedisPubSub {
 
             newJ.lpush("orderCreatedQ",objectMapper.writeValueAsString(exOrder));
 
+            System.out.println("Pushed");
+
             newJ.close();
 
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-
-
-
 
 
     }
@@ -57,8 +53,5 @@ public class TradeEnginePubSub extends JedisPubSub {
         super.onSubscribe(channel, subscribedChannels);
     }
 
-    @Override
-    public void onUnsubscribe(String channel, int subscribedChannels) {
-        super.onUnsubscribe(channel, subscribedChannels);
-    }
+
 }

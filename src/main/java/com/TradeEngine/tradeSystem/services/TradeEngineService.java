@@ -1,10 +1,9 @@
 package com.TradeEngine.tradeSystem.services;
 
 import com.TradeEngine.tradeSystem.DAOs.MarketDataRepo;
-import com.TradeEngine.tradeSystem.DTOs.ExchangeOrder;
 import com.TradeEngine.tradeSystem.DTOs.MarketData;
 import com.TradeEngine.tradeSystem.DTOs.ProductOrder;
-import com.TradeEngine.tradeSystem.DTOs.TradeEnginePubSub;
+import com.TradeEngine.tradeSystem.utils.TradeEnginePubSub;
 import com.TradeEngine.tradeSystem.utils.TradeEngineRedisClient;
 import com.TradeEngine.tradeSystem.exceptions.RedisConnectionFailedException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,34 +22,50 @@ public class TradeEngineService{
     @Autowired
     MarketDataRepo marketDataRepo;
 
+    public ProductOrder strategize(ProductOrder productOrder){
+
+        ProductOrder exchangeOrder;
+
+        if (productOrder.getExchange().equalsIgnoreCase("both")){
+            //Retrieve market data on specific product
+            MarketData orderMD1 = marketDataRepo.getExchange1DataRepository()
+                    .stream()
+                    .filter(md -> md.getTICKER().equalsIgnoreCase(productOrder.getProductName()))
+                    .findFirst()
+                    .get();
 
 
-    public ExchangeOrder strategize(ProductOrder productOrder){
+            MarketData orderMD2 = marketDataRepo.getExchange2DataRepository()
+                    .stream()
+                    .filter(md -> md.getTICKER().equalsIgnoreCase(productOrder.getProductName()))
+                    .findFirst()
+                    .get();
 
-        //Retrieve market data on specific product
-        MarketData orderMD1 = marketDataRepo.getExchange1DataRepository()
-                .stream()
-                .filter(md -> md.getTICKER().equalsIgnoreCase(productOrder.getProductName()))
-                .findFirst()
-                .get();
+            //compare marketData
+            String exchange = compareData(orderMD1,orderMD2, productOrder.getSide());
+
+             exchangeOrder = new ProductOrder(productOrder.getProductName(),
+                    productOrder.getPrice(),
+                    productOrder.getQuantity(),
+                    productOrder.getSide(), exchange);
+
+        }else if(productOrder.getExchange().equalsIgnoreCase("ex1")){
+
+            exchangeOrder = new ProductOrder(productOrder.getProductName(),
+                    productOrder.getPrice(),
+                    productOrder.getQuantity(),
+                    productOrder.getSide(), "ex1");
+        }else {
+
+            exchangeOrder = new ProductOrder(productOrder.getProductName(),
+                    productOrder.getPrice(),
+                    productOrder.getQuantity(),
+                    productOrder.getSide(), "ex2");
+        }
 
 
-        MarketData orderMD2 = marketDataRepo.getExchange2DataRepository()
-                .stream()
-                .filter(md -> md.getTICKER().equalsIgnoreCase(productOrder.getProductName()))
-                .findFirst()
-                .get();
 
-        //compare marketData
-        String exchange = compareData(orderMD1,orderMD2, productOrder.getSide());
-
-        System.out.println(orderMD1);
-        System.out.println(orderMD2);
-
-        return new ExchangeOrder(productOrder.getProductName(),
-                productOrder.getPrice(),
-                productOrder.getQuantity(),
-                productOrder.getSide(), exchange);
+        return exchangeOrder;
 
     }
 

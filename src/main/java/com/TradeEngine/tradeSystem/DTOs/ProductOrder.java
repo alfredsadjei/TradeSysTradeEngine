@@ -1,22 +1,28 @@
 package com.TradeEngine.tradeSystem.DTOs;
 
 
-//This represents the order being received by the engine
-public class ProductOrder {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-    private String id; //random UUID string;
+//This represents the order being received by the engine
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ProductOrder {
     private String productName; //product name
     private double price; //how much client is willing to buy or sell for
-    private Long clientId;
-    private double funds;
-    private int quantityOwned;
     private int quantity; // number of products to buy or sell
     private String side; // buy or sell order
-    private String date;
     private String status;
+    private String exchange;
 
-    public String getID() {
-        return id;
+    public ProductOrder(String productName, double price, int quantity, String side, String exchange) {
+        this.productName = productName;
+        this.price = price;
+        this.quantity = quantity;
+        this.side = side;
+        this.exchange = exchange;
+    }
+
+    public ProductOrder() {
+
     }
 
     public String getProductName() {
@@ -27,36 +33,12 @@ public class ProductOrder {
         this.productName = productName;
     }
 
-    public Long getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(Long clientId) {
-        this.clientId = clientId;
-    }
-
     public double getPrice() {
         return price;
     }
 
     public void setPrice(double price) {
         this.price = price;
-    }
-
-    public int getQuantityOwned() {
-        return quantityOwned;
-    }
-
-    public void setQuantityOwned(int quantityOwned) {
-        this.quantityOwned = quantityOwned;
-    }
-
-    public double getFunds() {
-        return funds;
-    }
-
-    public void setFunds(double funds) {
-        this.funds = funds;
     }
 
     public int getQuantity() {
@@ -75,10 +57,6 @@ public class ProductOrder {
         this.side = side;
     }
 
-    public String getDate() {
-        return date;
-    }
-
     public String getStatus() {
         return status;
     }
@@ -87,19 +65,23 @@ public class ProductOrder {
         this.status = status;
     }
 
+    public String getExchange() {
+        return exchange;
+    }
+
+    public void setExchange(String exchange) {
+        this.exchange = exchange;
+    }
+
     @Override
     public String toString() {
         return "ProductOrder{" +
-                "id='" + id + '\'' +
-                ", productName='" + productName + '\'' +
+                "productName='" + productName + '\'' +
                 ", price=" + price +
-                ", clientId=" + clientId +
-                ", funds=" + funds +
-                ", quantityOwned=" + quantityOwned +
                 ", quantity=" + quantity +
                 ", side='" + side + '\'' +
-                ", date='" + date + '\'' +
                 ", status='" + status + '\'' +
+                ", exchange='" + exchange + '\'' +
                 '}';
     }
 }
