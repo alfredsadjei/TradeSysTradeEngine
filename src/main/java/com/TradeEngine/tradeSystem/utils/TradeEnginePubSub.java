@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
+import java.io.IOException;
+import java.util.List;
+
 
 @Service
 public class TradeEnginePubSub extends JedisPubSub {
@@ -26,22 +29,26 @@ public class TradeEnginePubSub extends JedisPubSub {
 
             orderMessage = objectMapper.readValue(message,ProductOrder.class);
 
-            ProductOrder exOrder = tradeEngineService.strategize(orderMessage);
+            List<ProductOrder> orderList = tradeEngineService.strategize(orderMessage);
 
-            System.out.println(exOrder);
+            System.out.println(orderList);
 
             //send order to exchange connectivity
             //Can't use the same jedis instance for pushing to queue
             Jedis newJ = new Jedis("redis-17849.c59.eu-west-1-2.ec2.cloud.redislabs.com",17849);
             newJ.auth(RedisServer.SERVER_KEY.getKeyVal());
 
-            newJ.lpush("orderCreatedQ",objectMapper.writeValueAsString(exOrder));
+            for (ProductOrder p: orderList
+                 ) {
+                newJ.lpush("orderCreatedQ",objectMapper.writeValueAsString(p));
+            }
+
 
             System.out.println("Pushed");
 
             newJ.close();
 
-        } catch (JsonProcessingException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
