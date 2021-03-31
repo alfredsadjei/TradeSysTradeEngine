@@ -2,6 +2,7 @@ package com.TradeEngine.tradeSystem.services;
 
 import com.TradeEngine.tradeSystem.DTOs.OpenOrder;
 import com.TradeEngine.tradeSystem.DTOs.ProductOrder;
+import com.TradeEngine.tradeSystem.exceptions.DataNotFoundException;
 import com.TradeEngine.tradeSystem.utils.OrderBookService;
 import com.TradeEngine.tradeSystem.utils.TradeEnginePubSub;
 import com.TradeEngine.tradeSystem.utils.TradeEngineRedisClient;
@@ -17,6 +18,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -34,12 +36,12 @@ public class TradeEngineService{
         if (productOrder.getExchange().equalsIgnoreCase("both")){
             //Retrieve orderBook data on specific product
             List<OpenOrder> orderD1 = getOrderBookData( productOrder,"ex1");
-
-
             List<OpenOrder> orderD2 = getOrderBookData( productOrder,"ex2");
+
 
             //compare marketData and return list
             OrderList = compareData(orderD1,orderD2, productOrder);
+
 
         }else if(productOrder.getExchange().equalsIgnoreCase("ex1")){
 
@@ -60,95 +62,144 @@ public class TradeEngineService{
     }
 
     private List<ProductOrder> compareData(List<OpenOrder> d1, List<OpenOrder> d2, ProductOrder order){
+
         List<ProductOrder> exchangeOrderList = new ArrayList<>();
 
         if (order.getSide().equalsIgnoreCase("BUY")){
 
-            //FIRST GET AVG ASK PRICE FROM BOTH EXCHANGES
-            double avg_ask1 = get_avg_ask(d1);
-            double avg_ask2 = get_avg_ask(d2);
+            //FIRST GET MIN ASK PRICE FROM BOTH EXCHANGES
+            double min_ask1 = get_min_ask(d1);
+            double min_ask2 = get_min_ask(d2);
 
-            if (avg_ask1 <= avg_ask2){
+            if (min_ask1 <= min_ask2){
+
                 //get available quantity from ex1
                 int available = getAvailableQuantity(d1, order.getSide());
 
                 if (available >= order.getQuantity()){
+                    List<ProductOrder> tempList = new ArrayList<>();
+
                     //no need to split
-                    exchangeOrderList.add(new ProductOrder(order.getProductName()
-                            , order.getPrice()
+                    tempList.add(new ProductOrder(order.getProductName()
+                            //if original price is greater that ask price, set order price to ask price
+                            //else if ask price is greater order price by .16 or more, keep original order price
+                            //else set order price original order price + 0.25
+                            , order.getPrice() >= min_ask1? min_ask1
+                            : min_ask1 - order.getPrice()>0.25?order.getPrice():order.getPrice()+(min_ask1 - order.getPrice())
                             , order.getQuantity()
                             , order.getSide()
                             ,"ex1"));
+
+                    exchangeOrderList = tempList;
                 }else{
-                    exchangeOrderList.add(new ProductOrder(order.getProductName()
-                            , order.getPrice()
+
+                    List<ProductOrder> tempList = new ArrayList<>();
+
+                    tempList.add(new ProductOrder(order.getProductName()
+                            , order.getPrice() >= min_ask1? min_ask1
+                            : min_ask1 - order.getPrice() > 0.25? order.getPrice():order.getPrice() + (min_ask1 - order.getPrice())
                             , available
                             , order.getSide()
                             ,"ex1"));
 
-                    exchangeOrderList.add(new ProductOrder(order.getProductName()
-                            , order.getPrice()
+                    tempList.add(new ProductOrder(order.getProductName()
+                            , order.getPrice() >= min_ask2? min_ask2
+                            : min_ask2 - order.getPrice() > 0.25? order.getPrice():order.getPrice() + (min_ask2 - order.getPrice())
                             , order.getQuantity() - available
                             , order.getSide()
                             ,"ex2"));
+
+                    exchangeOrderList = tempList;
                 }
 
             }else{
+
                 //get available quantity from ex2
                 int available = getAvailableQuantity(d2, order.getSide());
 
                 if (available >= order.getQuantity()){
-
+                    List<ProductOrder> tempList = new ArrayList<>();
                     //no need to split
-                    exchangeOrderList.add(new ProductOrder(order.getProductName()
-                            , order.getPrice()
+                    tempList.add(new ProductOrder(order.getProductName()
+                            , order.getPrice() >= min_ask2? min_ask2
+                            : min_ask2 - order.getPrice() > 0.25? order.getPrice():order.getPrice() + (min_ask2 - order.getPrice())
                             , order.getQuantity()
                             , order.getSide()
                             ,"ex2"));
+
+                    exchangeOrderList = tempList;
                 }else{
-                    exchangeOrderList.add(new ProductOrder(order.getProductName()
-                            , order.getPrice()
+                    List<ProductOrder> tempList = new ArrayList<>();
+
+                    tempList.add(new ProductOrder(order.getProductName()
+                            , order.getPrice() >= min_ask2? min_ask2
+                            : min_ask2 - order.getPrice() > 0.25? order.getPrice():order.getPrice() + (min_ask2 - order.getPrice())
                             , available
                             , order.getSide()
                             ,"ex2"));
 
-                    exchangeOrderList.add(new ProductOrder(order.getProductName()
-                            , order.getPrice()
+                    tempList.add(new ProductOrder(order.getProductName()
+                            , order.getPrice() >= min_ask1? min_ask1
+                            : min_ask1 - order.getPrice() > 0.25? order.getPrice():order.getPrice() + (min_ask1 - order.getPrice())
                             , order.getQuantity() - available
                             , order.getSide()
                             ,"ex1"));
+
+                    exchangeOrderList = tempList;
+
                 }
             }
 
-
         }else{
-            //FIRST GET AVG BID PRICE FROM BOTH EXCHANGES
-            double avg_bid1 = get_avg_bid(d1);
-            double avg_bid2 = get_avg_bid(d2);
 
-            if (avg_bid1 >= avg_bid2){
+
+
+            //FIRST GET MAX BID PRICE FROM BOTH EXCHANGES
+            double max_bid1 = get_max_bid(d1);
+            double max_bid2 = get_max_bid(d2);
+
+
+            if (max_bid1 >= max_bid2){
                 //get available quantity from ex1
                 int available = getAvailableQuantity(d1, order.getSide());
 
                 if (available >= order.getQuantity()){
+
+                    List<ProductOrder> tempList = new ArrayList<>();
                     //no need to split
-                    exchangeOrderList.add(new ProductOrder(order.getProductName()
-                            , order.getPrice()
+                    tempList.add(new ProductOrder(order.getProductName()
+                            // if original ask price is less than max bid price, set order as max bid price
+                            //else if the difference between original order price and max bid price is greater than 0.25
+                            //set order price as max bid price
+                            //else set order price to the order price - the difference
+                            , order.getPrice() <= max_bid1? max_bid1
+                            : order.getPrice() - max_bid1 > 0.25 ? max_bid1
+                            : order.getPrice() - (order.getPrice() - max_bid1)
                             , order.getQuantity()
                             , order.getSide()
                             ,"ex1"));
+
+                    exchangeOrderList = tempList;
                 }else{
-                    exchangeOrderList.add(new ProductOrder(order.getProductName()
-                            , order.getPrice()
+
+                    List<ProductOrder> tempList = new ArrayList<>();
+                    tempList.add(new ProductOrder(order.getProductName()
+                            , order.getPrice() <= max_bid1? max_bid1
+                            : order.getPrice() - max_bid1 > 0.25 ? max_bid1
+                            : order.getPrice() - (order.getPrice() - max_bid1)
                             , available
                             , order.getSide()
                             ,"ex1"));
 
-                    exchangeOrderList.add(new ProductOrder(order.getProductName()
-                            , order.getPrice()
+                    tempList.add(new ProductOrder(order.getProductName()
+                            , order.getPrice() <= max_bid2? max_bid2
+                            : order.getPrice() - max_bid2 > 0.25 ? max_bid2
+                            : order.getPrice() - (order.getPrice() - max_bid2)
                             , order.getQuantity() - available
                             , order.getSide()
                             ,"ex2"));
+
+                    exchangeOrderList = tempList;
                 }
 
             }else{
@@ -156,25 +207,37 @@ public class TradeEngineService{
                 int available = getAvailableQuantity(d2, order.getSide());
 
                 if (available >= order.getQuantity()){
+                    List<ProductOrder> tempList = new ArrayList<>();
 
                     //no need to split
-                    exchangeOrderList.add(new ProductOrder(order.getProductName()
-                            , order.getPrice()
+                    tempList.add(new ProductOrder(order.getProductName()
+                            , order.getPrice() <= max_bid2? max_bid2
+                            : order.getPrice() - max_bid2 > 0.25 ? max_bid2
+                            : order.getPrice() - (order.getPrice() - max_bid2)
                             , order.getQuantity()
                             , order.getSide()
                             ,"ex2"));
+
+                    exchangeOrderList = tempList;
                 }else{
-                    exchangeOrderList.add(new ProductOrder(order.getProductName()
-                            , order.getPrice()
+                    List<ProductOrder> tempList = new ArrayList<>();
+                    tempList.add(new ProductOrder(order.getProductName()
+                            , order.getPrice() <= max_bid2? max_bid2
+                            : order.getPrice() - max_bid2 > 0.25 ? max_bid2
+                            : order.getPrice() - (order.getPrice() - max_bid2)
                             , available
                             , order.getSide()
                             ,"ex2"));
 
-                    exchangeOrderList.add(new ProductOrder(order.getProductName()
-                            , order.getPrice()
+                   tempList.add(new ProductOrder(order.getProductName()
+                            , order.getPrice() <= max_bid1? max_bid1
+                            : order.getPrice() - max_bid1 > 0.25 ? max_bid1
+                            : order.getPrice() - (order.getPrice() - max_bid1)
                             , order.getQuantity() - available
                             , order.getSide()
                             ,"ex1"));
+
+                   exchangeOrderList = tempList;
                 }
             }
 
@@ -183,7 +246,6 @@ public class TradeEngineService{
 
         return exchangeOrderList;
     }
-
 
     private List<OpenOrder> getOrderBookData(ProductOrder order, String exchange) throws IOException {
 
@@ -196,44 +258,30 @@ public class TradeEngineService{
         Call<List<OpenOrder>> orderBook = exchange.equals("ex1") ?
                 orderBookService.getData("https://exchange.matraining.com/orderbook/"
                 +order.getProductName()
-                +"/") :
+                ) :
                 orderBookService.getData("https://exchange2.matraining.com/orderbook/"
                 +order.getProductName()
-                +"/");
+                );
 
         return orderBook.execute().body();
     }
 
-    private double get_avg_ask(List<OpenOrder> data){
+    private double get_min_ask(List<OpenOrder> data){
 
-        double sum_ask = data.stream()
+        return data.stream()
                 .filter(openOrder -> openOrder.getSide().equalsIgnoreCase("sell")
                         && openOrder.getCumulativeQuantity() < openOrder.getQuantity())
-                .map(OpenOrder::getPrice)
-                .reduce(Double::sum).get();
-
-        double count_ask = data.stream()
-                .filter(openOrder -> openOrder.getSide().equalsIgnoreCase("sell")
-                        && openOrder.getExecutions().isEmpty())
-                .count();
-
-        return sum_ask/count_ask;
+                .map(OpenOrder::getPrice).filter(price -> price > 0)
+                .reduce(Double::min).orElseThrow(()-> new DataNotFoundException("Min ask price data was not available"));
 
     }
 
-    private double get_avg_bid(List<OpenOrder> data){
-        double sum_bid = data.stream()
+    private double get_max_bid(List<OpenOrder> data){
+        return data.stream()
                 .filter(openOrder -> openOrder.getSide().equalsIgnoreCase("buy")
                         && openOrder.getCumulativeQuantity() < openOrder.getQuantity())
                 .map(OpenOrder::getPrice)
-                .reduce(Double::sum).get();
-
-        double count_bid = data.stream()
-                .filter(openOrder -> openOrder.getSide().equalsIgnoreCase("buy")
-                        && openOrder.getExecutions().isEmpty())
-                .count();
-
-        return sum_bid/count_bid;
+                .reduce(Double::max).orElseThrow(()-> new DataNotFoundException("Max bid price data was not available"));
 
     }
 
@@ -244,7 +292,7 @@ public class TradeEngineService{
                         "sell" : "buy")
                         && openOrder.getCumulativeQuantity() < openOrder.getQuantity())
                 .map(openOrder -> openOrder.getQuantity() - openOrder.getCumulativeQuantity())
-                .reduce(Integer::sum).get();
+                .reduce(Integer::sum).orElseThrow(()-> new DataNotFoundException(" Available quantity data was not available"));
     }
 
     @EventListener(ApplicationReadyEvent.class)

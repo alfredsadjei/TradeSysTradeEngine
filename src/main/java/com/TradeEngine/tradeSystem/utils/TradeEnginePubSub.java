@@ -10,6 +10,8 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -24,12 +26,13 @@ public class TradeEnginePubSub extends JedisPubSub {
        //receive message deserialize and apply trade engine business logic
         ObjectMapper objectMapper = new ObjectMapper();
         ProductOrder orderMessage;
+        List<ProductOrder> orderList;
 
         try {
 
             orderMessage = objectMapper.readValue(message,ProductOrder.class);
 
-            List<ProductOrder> orderList = tradeEngineService.strategize(orderMessage);
+             orderList = tradeEngineService.strategize(orderMessage);
 
             System.out.println(orderList);
 
@@ -38,10 +41,14 @@ public class TradeEnginePubSub extends JedisPubSub {
             Jedis newJ = new Jedis("redis-17849.c59.eu-west-1-2.ec2.cloud.redislabs.com",17849);
             newJ.auth(RedisServer.SERVER_KEY.getKeyVal());
 
+
             for (ProductOrder p: orderList
                  ) {
+
                 newJ.lpush("orderCreatedQ",objectMapper.writeValueAsString(p));
             }
+
+            orderList.clear();
 
 
             System.out.println("Pushed");

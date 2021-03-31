@@ -9,15 +9,15 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OpenOrder {
 
-    private String productName;
+    private String product;
     private int quantity;
     private double price;
     private String side;
     private List<Execution> executions;
     private int cumulativeQuantity;
 
-    public OpenOrder(String productName, int quantity, double price, String side, List<Execution> executions, int cumulativeQuantity) {
-        this.productName = productName;
+    public OpenOrder(String product, int quantity, double price, String side, List<Execution> executions, int cumulativeQuantity) {
+        this.product = product;
         this.quantity = quantity;
         this.price = price;
         this.side = side;
@@ -26,11 +26,11 @@ public class OpenOrder {
     }
 
     public String getProductName() {
-        return productName;
+        return product;
     }
 
-    public void setProductName(String productName) {
-        this.productName = productName;
+    public void setProductName(String product) {
+        this.product = product;
     }
 
     public int getQuantity() {
@@ -126,7 +126,7 @@ public class OpenOrder {
     @Override
     public String toString() {
         return "OpenOrder{" +
-                "productName='" + productName + '\'' +
+                "product='" + product + '\'' +
                 ", quantity=" + quantity +
                 ", price=" + price +
                 ", side='" + side + '\'' +
